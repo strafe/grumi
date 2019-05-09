@@ -4,7 +4,7 @@
 # 🖼️ Upload an image, video or album to Imgur.
 
 readonly program="$(basename "$0")"
-readonly version='0.0.2'
+readonly version='0.0.3'
 
 function usage() {
     cat <<EOF
@@ -112,7 +112,7 @@ args "$@"
 deps 'curl' 'file' 'jq'
 
 # https://api.imgur.com/oauth2/addclient
-client_id="$(<${HOME}/.grumi)"
+readonly client_id="$(<${HOME}/.grumi)"
 if [[ -z "$client_id" ]]; then
     mkdir -p "${HOME}/.grumi"
     printf 'You must provide a valid Client ID in %s/.grumi\n' "$HOME" 1>&2; exit 1
