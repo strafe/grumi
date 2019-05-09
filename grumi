@@ -114,7 +114,7 @@ deps 'curl' 'file' 'jq'
 # https://api.imgur.com/oauth2/addclient
 readonly client_id="$(<${HOME}/.grumi)"
 if [[ -z "$client_id" ]]; then
-    mkdir -p "${HOME}/.grumi"
+    touch "${HOME}/.grumi"
     printf 'You must provide a valid Client ID in %s/.grumi\n' "$HOME" 1>&2; exit 1
 fi
 
