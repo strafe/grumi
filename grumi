@@ -4,7 +4,13 @@
 # 🖼️ Upload an image, video or album to Imgur.
 
 readonly program="$(basename "$0")"
-readonly version='0.0.3'
+readonly version='0.0.4'
+
+readonly img_max_size=1000000
+readonly img_body_key='image'
+
+readonly vid_max_size=200000000
+readonly vid_body_key='video'
 
 function usage() {
     cat <<EOF
@@ -131,8 +137,8 @@ for i in "$@"; do
 
     case "$?" in
     '0') continue ;;
-    '1') size "$i" '1000000' "$?" ;;
-    '2') size "$i" '200000000' "$?" ;;
+    '1') size "$i" "$img_max_size" "$?" ;;
+    '2') size "$i" "$vid_max_size" "$?" ;;
     esac
 
     case "$?" in
@@ -143,8 +149,8 @@ for i in "$@"; do
 
     case "$?" in
     '0') continue ;;
-    '1') upld $i 'image' ;;
-    '2') upld $i 'video' ;;
+    '1') upld "$i" "$img_body_key" ;;
+    '2') upld "$i" "$vid_body_key" ;;
     esac
 done
 
