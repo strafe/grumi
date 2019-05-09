@@ -118,10 +118,10 @@ if [[ -z "$client_id" ]]; then
     printf 'You must provide a valid Client ID in %s/.grumi\n' "$HOME" 1>&2; exit 1
 fi
 
-# stat differs between macOS and other platforms.
-case "$(uname -s)" in
-'Darwin') stat_fmt='-f%z' ;;
-*) stat_fmt='-c%s' ;;
+# stat differs between BSD and GNU coreutils.
+case "$(stat --version | grep -o 'stat\s(GNU\scoreutils)')" in
+'stat (GNU coreutils)') stat_fmt='-c%s' ;;
+'') stat_fmt='-f%z' ;;
 esac
 
 # main.
