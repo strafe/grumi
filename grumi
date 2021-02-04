@@ -125,7 +125,7 @@ if [[ -z "$client_id" ]]; then
 fi
 
 # stat differs between BSD and GNU coreutils.
-case "$(stat --version | grep -o 'stat\s(GNU\scoreutils)')" in
+case "$(stat --version 2> /dev/null | grep -o 'stat\s(GNU\scoreutils)')" in
 'stat (GNU coreutils)') stat_fmt='-c%s' ;;
 '') stat_fmt='-f%z' ;;
 esac
