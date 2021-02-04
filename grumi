@@ -110,7 +110,7 @@ function albm() {
         printf 'Error creating album (%s)\n' "$1" "$err" 1>&2; return 0
     fi
 
-    printf 'https://imgur.com/a/%s' "$(jq -r '.data.id' <<< "$resp")"
+    printf 'https://imgur.com/a/%s\n' "$(jq -r '.data.id' <<< "$resp")"
 }
 
 # https://curl.haxx.se, https://stedolan.github.io/jq, https://linux.die.net/man/1/file
@@ -156,6 +156,6 @@ done
 
 case "${#uploaded[@]}" in
 '0') printf 'No images uploaded.\n' ;;
-'1') printf '%s' "$(cut -d';' -f2 <<< "${uploaded[0]}")" ;;
+'1') printf '%s\n' "$(cut -d';' -f2 <<< "${uploaded[0]}")" ;;
 *) albm ;;
 esac
