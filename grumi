@@ -3,52 +3,35 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur.
 readonly program="$(basename "$0")"
-readonly version='0.1.3'
+readonly version=0.2.0
 
-# Imgur's API docs are infamously bad, but 10MB for images and 200MB for videos seems correct.
-readonly image_max_size='10000000'
-readonly video_max_size='200000000'
-readonly video_max_length='60.0'
+# Imgur's API docs are infamously bad (https://apidocs.imgur.com).
+readonly image_max_size=10000000
+readonly video_max_size=200000000
+readonly video_max_length=60.0
 
-function process_args() {
-    if [[ "$#" -eq 0 ]]; then
-        show_usage
-        exit 1
+function process_arguments() {
+    # If no arguments are supplied.
+    if (( "$#" == 0 )); then
+        print_usage
+        exit
     fi
 
-    while [[ "$1" ]]; do
+    while [ -n "$1" ]; do
         case "$1" in
-            '-h'|'--help')
-                show_usage
-                exit
-                ;;
-            '-v'|'--version')
-                printf '%s version %s\n' "$program" "$version"
-                exit
-                ;;
-            '-c'|'--client_id')
-                client_id="$2"
-                shift
-                ;;
-            '-d'|'--disable_audio')
-                readonly disable_audio='1'
-                ;;
-            '-a'|'--album')
-                readonly use_album='true'
-                ;;
-            '-'*)
-                printf 'Invalid option: %s\n' "$1" 1>&2
-                exit 1
-                ;;
-            *)
-                args+=("$1")
-                ;;
-        esac
+            -h|--help) print_usage; exit ;;
+            -v|--version) printf '%s: version %s\n' "$program" "$version"; exit ;;
+            -a|--album) readonly use_album=true ;;
+            -c|--client_id) client_id="$2"; shift ;;
+            -d|--disable_audio) readonly disable_audio=1 ;;
+            -*) printf '%s: Invalid option: %s\n' "$program" "$1" 1>&2; exit 1 ;;
+            *) args+=("$1") ;;
+        esac    
         shift
     done
 }
 
-function show_usage() {
+function print_usage() {
     cat <<EOF
 Usage: $program [OPTIONS] <file1> <file2>...
 Upload an image, video or album to Imgur.
@@ -56,9 +39,9 @@ Upload an image, video or album to Imgur.
 Options:
     -h, --help              Output this message.
     -v, --version           Output the current version.
+    -a, --album             Creates an album containing the provided image(s)/video(s).
     -c, --client_id         Imgur Client ID (overrides ${HOME}/.grumi).
-    -d, --disable_audio     Disables audio in passed videos.
-    -a, --album             Create an album containing the passed images/videos.
+    -d, --disable_audio     Disables audio in provided videos.
 EOF
 }
 
@@ -72,220 +55,136 @@ function depends_on() {
         fi
     done
 
-    if [[ "${#missing_deps[@]}" -gt 0 ]]; then
-        printf 'Missing dependancy: %s\n' "${missing_deps[@]}" 1>&2; exit 1
+    if (( "${#missing_deps[@]}" > 0 )); then
+        printf '%s: Missing dependancy: %s\n' "$program" "${missing_deps[@]}" 1>&2
+        exit 1
     fi
 }
 
-function check_client_id() {
-    if [[ -z "$client_id" ]]; then
-        if [[ -f "${HOME}/.grumi" ]]; then
-            readonly client_id="$(<${HOME}/.grumi)" 2> /dev/null
+function check_id() {
+    if [ -z "$client_id" ]; then
+        if [ -f "${HOME}/.grumi" ]; then
+            readonly client_id="$(<"${HOME}/.grumi")"
         fi
 
-        if [[ -z "$client_id" ]]; then
-            printf 'You must provide a valid Client ID using -c, --client_id or in %s/.grumi\n' "$HOME" 1>&2
-            printf 'Login and generate one here: https://api.imgur.com/oauth2/addclient\n' 1>&2
+        if [ -z "$client_id" ]; then
+            printf '%s: You must provide a valid Client ID using -c, --client_id or in %s/.grumi\n' "$program" "$HOME" 1>&2
+            printf '%s: Login and generate one here: https://api.imgur.com/oauth2/addclient\n' "$program" 1>&2
+
+            >"${HOME}/.grumi"
             exit 1
         fi
     fi
 }
 
 function process_files() {
-    if [[ "$#" -eq 0 ]]; then
-        printf 'No files passed.\n' 1>&2
+    if (( "$#" == 0 )); then
+        printf '%s: No files were provided.\n' "$program" 1>&2
         exit 1
     fi
 
+    local uploaded_files=()
     for f in "$@"; do
-        if [[ ! -f "$f" ]]; then
-            printf 'grumi: %s: No such file.\n' "$f" 1>&2
+        if [ ! -f "$f" ]; then
+            printf '%s: %s: No such file.\n' "$program" "$f" 1>&2
             continue
         fi
 
-        # Has to be declared, then set for $? to work: https://tldp.org/LDP/abs/html/localvar.html
-        local mime_type
-        mime_type="$(check_mime_type "$f")"
-        if [[ "$?" -eq 1 ]]; then
-            printf 'grumi: %s: Invalid mime type (%s).\n' "$f" "$mime_type" 1>&2
-            continue
-        fi
-
-        # Imgur limits the size of images/videos uploaded through the API seperately to their website.
-        local max_size
-        max_size="$(check_file_size "$f" "$mime_type")"
-        if [[ "$?" -eq 1 ]]; then
-            printf 'grumi: %s: File too large (max: %sMB).\n' "$f" "$max_size" 1>&2
-            continue
-        fi
-
-        # Videos have a maximum length of 60 seconds.
-        if [[ "$mime_type" == "video"* ]]; then
-            check_video_length "$f"
-            if [[ "$?" -eq 1 ]]; then
-                printf 'grumi: %s: Video too long (max: %ss).\n' "$f" "$video_max_length" 1>&2
-                continue
-            fi
-        fi
-
-        # Upload!
         local result
-        result="$(upload_file "$f" "$mime_type")"
-        if [[ "$?" -eq 1 ]]; then
-            printf 'grumi: %s: Failed to upload (response: %s).\n' "$f" "$result" 1>&2
+        result="$(upload_file "$f")"
+        if (( "$?" == 1 )); then
+            printf '%s: %s: Failed to upload (error: %s).\n' "$program" "$f" "$result" 1>&2
             continue
         fi
 
         uploaded_files+=("$result")
     done
-}
 
-function check_mime_type() {
-    local -r mime_type="$(file -b --mime-type "$1")"
-    echo "$mime_type"
-
-    # Supported image types.
-    if [[ "$mime_type" =~ ^('image/jpeg'|'image/gif'|'image/apng'|'image/tiff'|'image/png')$ ]]; then
+    if (( "${#uploaded_files[@]}" == 0 )); then
+        printf '%s: No files were uploaded.\n' "$program"
         return
     fi
 
-    # Supported video types (now supports mp4 and quicktime!).
-    if [[ "$mime_type" =~ ^('video/mp4'|'video/webm'|'video/x-matroska'|'video/quicktime'|'video/x-flv'|'video/x-msvideo'|'video/x-ms-wmv'|'video/mpeg')$ ]]; then
-        return
-    fi
+    # Create and add to album if specified, otherwise print URLs.
+    if [[ "$use_album" == true ]]; then
+        local album
+        album="$(create_album "${uploaded_files[@]}")"
+        if (( "$?" == 1 )); then
+            printf '%s: Failed to album (error: %s).\n' "$program" "$album" 1>&2
+            print_urls "${uploaded_files[@]}"
+            return
+        fi
 
-    return 1
-}
-
-function check_file_size() {
-    # stat differs between BSD and GNU coreutils.
-    local stat_fmt
-    case "$(stat --version 2> /dev/null | grep -o 'stat\s(GNU\scoreutils)')" in
-        'stat (GNU coreutils)')
-            stat_fmt='-c%s'
-            ;;
-        '')
-            stat_fmt='-f%z'
-            ;;
-    esac
-
-    local max_size
-    case "$2" in
-        'image'*)
-            max_size="$image_max_size"
-            ;;
-        'video'*)
-            max_size="$video_max_size"
-            ;;
-    esac
-
-    if [[ "$(stat "$stat_fmt" "$1")" -gt "$max_size" ]]; then
-        echo "$(expr "$max_size" / '1000000')"
-        return 1
-    fi
-}
-
-function check_video_length() {
-    depends_on 'ffprobe'
-
-    if (( $(echo "$(ffprobe -i $1 -show_entries format=duration -v quiet -of csv='p=0') > $video_max_length" | bc -l) )); then
-        return 1
+        printf '%s: https://imgur.com/a/%s\n' "$program" "$album"
+    else
+        print_urls "${uploaded_files[@]}"
     fi
 }
 
 function upload_file() {
-    local file_type
-    case "$2" in
-        'image'*)
-            file_type='image'
-            ;;
-        'video'*)
-            file_type='video'
-            ;;
-    esac
+    local -r file_type="$(file -b --mime-type "$1" | sed 's/\/.*$//')"
 
-    response="$(curl -s --http1.1 \
-        -X POST 'https://api.imgur.com/3/upload' \
+    local -r response="$(curl -s --http1.1 \
+        -X POST https://api.imgur.com/3/"$([ "$file_type" == image ] && echo image || echo upload)" \
         -H "Authorization: Client-ID ${client_id}" \
         -F "disable_audio=${disable_audio}" \
         -F "${file_type}=@${1}")"
 
-    # Responses are just empty sometimes.
-    if [[ -z "$response" ]]; then
-        echo "No reponse"
-        return 1
-    fi
-
-    local link="$(jq -r '.data.deletehash + ";" + .data.link' <<< "$response")"
-    if [[ "$link" == 'null' ]]; then
-        local err="$(jq 'map(.[0]) | .[].status' 2> /dev/null <<< "$response")"
-        if [[ "$err" != 'null' ]]; then
-            echo "$err"
-            return 1
+    # Error handling is tricky as the returned JSON is not consistent (sometimes data.error is an object).
+    if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
+        local error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
+        if [ -z "$error" ]; then
+            error="$(jq -r '.data.error' 2>/dev/null <<< "$response")"
         fi
 
-        echo "$response"
+        echo "$error"
         return 1
     fi
 
-    # Imgur doesn't append the extension for videos, shit website.
+    # Certain videos formats get returned without an extension in the URL.
+    local link="$(jq -r '.data.deletehash + ";" + .data.link' <<< "$response")"
     if [[ "$link" == *'.' ]]; then
         link="${link}mp4"
     fi
 
-    echo "${link##*$'\n'}"
+    echo "${link};${1}"
 }
 
 function create_album() {
     form=()
-    for i in "${uploaded_files[@]}"; do
-        form+=(-F "deletehashes[]="$(cut -d';' -f1 <<< "$i")"")
+    for i in "$@"; do
+        form+=("-F deletehashes[]="$(cut -d ';' -f 1 <<< "$i")"")
     done
 
-    response="$(curl -s --http1.1 \
+    local -r response="$(curl -s --http1.1 \
         -X POST 'https://api.imgur.com/3/album' \
         -H "Authorization: Client-ID ${client_id}" \
         "${form[@]}")"
 
-    local -r album="$(jq -r '.data.id' <<< "$response")"
-    if [[ "$album" == 'null' ]]; then
-        printf 'grumi: Failed to create album (%s).\n' "$response" 1>&2
-        print_images
-        return
+    if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
+        local error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
+        if [ -z "$error" ]; then
+            error="$(jq -r '.data.error' 2>/dev/null <<< "$response")"
+        fi
+
+        echo "$error"
+        return 1
     fi
 
-    printf 'https://imgur.com/a/%s\n' "$album"
+    echo "$(jq -r '.data.id' <<< "$response")"
 }
 
-function print_images() {
-    # Print out each URL.
-    for f in "${uploaded_files[@]}"; do
-        printf '%s\n' "$(cut -d';' -f2 <<< "$f")"
+function print_urls() {
+    for f in "$@"; do
+        printf '%s: %s (%s)\n' "$program" "$(cut -d';' -f2 <<< "$f")" "$(cut -d';' -f3 <<< "$f")"
     done
 }
 
-# Process arguments.
 args=()
-process_args "$@"
+process_arguments "$@"
 set -- "${args[@]}"
 
 # Depends on https://stedolan.github.io/jq
 depends_on 'file' 'curl' 'jq'
-check_client_id
-
-# Process files.
-uploaded_files=()
+check_id
 process_files "$@"
-
-# Check if no files were uploaded.
-if [[ "${#uploaded_files[@]}" -eq 0 ]]; then
-    printf 'No files uploaded.\n'
-    exit
-fi
-
-# Add to album if specified, otherwise print URLs.
-if [[ "$use_album" == 'true' ]]; then
-    create_album
-else
-    print_images
-fi
