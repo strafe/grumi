@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur.
 readonly program="$(basename "$0")"
-readonly version='0.1.1'
+readonly version='0.1.2'
 
 # Imgur's API docs are infamously bad, but 10MB for images and 200MB for videos seems correct.
 readonly image_max_size='10000000'
@@ -204,7 +204,7 @@ function upload_file() {
             ;;
     esac
 
-    response="$(curl -s \
+    response="$(curl -s --http1.1 \
         -X POST 'https://api.imgur.com/3/upload' \
         -H "Authorization: Client-ID ${client_id}" \
         -F "disable_audio=${disable_audio}" \
@@ -242,7 +242,7 @@ function create_album() {
         form+=(-F "deletehashes[]="$(cut -d';' -f1 <<< "$i")"")
     done
 
-    response="$(curl -s \
+    response="$(curl -s --http1.1 \
         -X POST 'https://api.imgur.com/3/album' \
         -H "Authorization: Client-ID ${client_id}" \
         "${form[@]}")"
