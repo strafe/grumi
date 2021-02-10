@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur.
 readonly program="$(basename "$0")"
-readonly version='0.1.0'
+readonly version='0.1.1'
 
 # Imgur's API docs are infamously bad, but 10MB for images and 200MB for videos seems correct.
 readonly image_max_size='10000000'
@@ -11,6 +11,11 @@ readonly video_max_size='200000000'
 readonly video_max_length='60.0'
 
 function process_args() {
+    if [[ "$#" -eq 0 ]]; then
+        show_usage
+        exit 1
+    fi
+
     while [[ "$1" ]]; do
         case "$1" in
             '-h'|'--help')
