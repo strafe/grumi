@@ -51,7 +51,7 @@ $ grumi -a image.png video.mp4
 grumi: https://imgur.com/a/mnopqr
 ```
 
-Upload a video without audio.
+Upload a video without audio (videos may take a while to process).
 ```
 $ grumi -d video.mp4
 grumi: https://i.imgur.com/ghijkl.mp4 (video.mp4)
