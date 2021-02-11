@@ -176,7 +176,9 @@ function create_album() {
 
 function print_urls() {
     for f in "$@"; do
-        printf '%s: %s (%s)\n' "$program" "$(cut -d';' -f2 <<< "$f")" "$(cut -d';' -f3 <<< "$f")"
+        local -r url="$(cut -d';' -f2 <<< "$f")"
+        local -r src="$(cut -d';' -f3 <<< "$f")"
+        printf '%s: %s (%s)\n' "$program" "$url" "${src##*/}"
     done
 }
 
