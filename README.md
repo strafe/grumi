@@ -2,12 +2,12 @@
 > 🖼️ Upload an image, video or album to Imgur via the command line.
 
 ## Dependencies
-- [file](https://linux.die.net/man/1/file)
-- [curl](https://curl.haxx.se/)
-- [jq](https://stedolan.github.io/jq)
+- [`file`](https://linux.die.net/man/1/file)
+- [`curl`](https://curl.haxx.se/)
+- [`jq`](https://stedolan.github.io/jq)
 
 ## Installation
-- macOS
+- macOS (`jq` will be automatically installed)
 ```
 brew install strafe/tap/grumi
 ```
