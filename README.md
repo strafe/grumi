@@ -29,7 +29,7 @@ Options:
 ```
 
 ## Examples
-Upload a single image or video.
+Upload a single image or video (videos may take a while to process).
 ```
 $ grumi image.png
 grumi: https://i.imgur.com/abcdef.png (image.png)
@@ -51,7 +51,13 @@ $ grumi -a image.png video.mp4
 grumi: https://imgur.com/a/mnopqr
 ```
 
-Upload a video without audio (videos may take a while to process).
+Upload an image by URL.
+```
+$ grumi https://example.com/example.png
+grimi https://i.imgur.com/abcdef.png (example.png)
+```
+
+Upload a video without audio.
 ```
 $ grumi -d video.mp4
 grumi: https://i.imgur.com/ghijkl.mp4 (video.mp4)

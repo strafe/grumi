@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur.
 readonly program="$(basename "$0")"
-readonly version=0.2.0
+readonly version=0.3.0
 
 # Imgur's API docs are infamously bad (https://apidocs.imgur.com).
 readonly image_max_size=10000000
