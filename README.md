@@ -37,7 +37,7 @@ To generate one, register a new application with Imgur [here](https://api.imgur.
 - Authorization callback URL: _example.com_
 - Email: _example@example.com_
 
-You should now see a screen with a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.grumi` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
+Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.grumi` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
 
 ## Examples
 Upload a single image or video (videos may take a while to process).
