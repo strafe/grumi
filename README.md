@@ -28,6 +28,17 @@ Options:
     -d, --disable_audio     Disables audio in provided videos.
 ```
 
+## Setup
+`grumi` requires you to provide your own Client ID to authenticate with the Imgur API. This is **not** used to associate uploads with your account, but simply to access the API.
+
+To generate one, register a new application with Imgur [here](https://api.imgur.com/oauth2/addclient). The fields listed below are _required_. What you choose to provide is mostly up to you, as `Authorization type` is the only important field.
+- Application name: _grumi_
+- Authorization type: _Anonymous usage without user authentication_
+- Authorization callback URL: _example.com_
+- Email: _example@example.com_
+
+You should now see a screen with a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.grumi` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
+
 ## Examples
 Upload a single image or video (videos may take a while to process).
 ```
