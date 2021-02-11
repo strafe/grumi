@@ -3,12 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur via the command line.
 readonly program="$(basename "$0")"
-readonly version=0.3.0
-
-# Imgur's API docs are infamously bad (https://apidocs.imgur.com).
-readonly image_max_size=10000000
-readonly video_max_size=200000000
-readonly video_max_length=60.0
+readonly version=0.4.0
 
 function process_arguments() {
     # If no arguments are supplied.
