@@ -85,7 +85,7 @@ function process_files() {
 
     local uploaded_files=()
     for f in "$@"; do
-        if [ ! -f "$f" ]; then
+        if [ ! -f "$f" ] && [[ "$f" != "http"* ]]; then
             printf '%s: %s: No such file.\n' "$program" "$f" 1>&2
             continue
         fi
@@ -122,13 +122,13 @@ function process_files() {
 }
 
 function upload_file() {
-    local -r file_type="$(file -b --mime-type "$1" | sed 's/\/.*$//')"
+    local -r file_type="$(file -b --mime-type "$1" | sed 's/\/.*$//')=@"
 
     local -r response="$(curl -s --http1.1 \
-        -X POST https://api.imgur.com/3/"$([ "$file_type" == image ] && echo image || echo upload)" \
+        -X POST https://api.imgur.com/3/"$([[ "$file_type" == "video"* ]] && echo upload || echo image)" \
         -H "Authorization: Client-ID ${client_id}" \
         -F "disable_audio=${disable_audio}" \
-        -F "${file_type}=@${1}")"
+        -F "$([[ "$1" == "http"* ]] && echo image= || echo "$file_type")${1}")"
 
     # Error handling is tricky as the returned JSON is not consistent (sometimes data.error is an object).
     if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then

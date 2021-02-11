@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+function post() {
+    local -r response="$(curl -s --http1.1 \
+        -X POST https://api.imgur.com/3/image \
+        -H "Authorization: Client-ID 23db8e3a1b478ef" \
+        -F "image=https://tangoworldwide.net/Themes/Altier_2/images/english/new.gif")"
+
+    echo "$response"
+}
+
+post
