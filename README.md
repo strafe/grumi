@@ -38,6 +38,7 @@ _Application name_|`grumi`
 _Authorization type_|`Anonymous usage without user authentication`
 _Authorization callback URL_|`example.com`
 _Email_|`grumi@example.com`
+<br>
 
 Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.grumi` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
 
