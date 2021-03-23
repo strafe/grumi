@@ -24,7 +24,7 @@ Options:
     -h, --help              Output this message.
     -v, --version           Output the current version.
     -a, --album             Creates an album containing the provided image(s)/video(s).
-    -c, --client_id         Imgur Client ID (overrides ${HOME}/.grumi).
+    -c, --client_id         Imgur Client ID (overrides ${HOME}/.config/grumi/client_id).
     -d, --disable_audio     Disables audio in provided videos.
 ```
 
@@ -40,7 +40,7 @@ _Authorization callback URL_|`example.com`
 _Email_|`grumi@example.com`
 <br>
 
-Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.grumi` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
+Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.config/grumi/client_id` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
 
 ## Examples
 Upload a single image or video (videos may take a while to process).

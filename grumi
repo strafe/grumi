@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur via the command line.
 readonly program="$(basename "$0")"
-readonly version=0.4.0
+readonly version=0.5.0
 
 function process_arguments() {
     # If no arguments are supplied.
@@ -35,7 +35,7 @@ Options:
     -h, --help              Output this message.
     -v, --version           Output the current version.
     -a, --album             Creates an album containing the provided image(s)/video(s).
-    -c, --client_id         Imgur Client ID (overrides ${HOME}/.grumi).
+    -c, --client_id         Imgur Client ID (overrides ${HOME}/.config/grumi/client_id).
     -d, --disable_audio     Disables audio in provided videos.
 EOF
 }
@@ -58,15 +58,16 @@ function depends_on() {
 
 function check_id() {
     if [ -z "$client_id" ]; then
-        if [ -f "${HOME}/.grumi" ]; then
-            readonly client_id="$(<"${HOME}/.grumi")"
+        if [ -f "${HOME}/.config/grumi/client_id" ]; then
+            readonly client_id="$(<"${HOME}/.config/grumi/client_id")"
         fi
 
         if [ -z "$client_id" ]; then
-            printf '%s: You must provide a valid Client ID using -c, --client_id or in %s/.grumi\n' "$program" "$HOME" 1>&2
+            printf '%s: You must provide a valid Client ID using -c, --client_id or in %s/.config/grumi/client_id\n' "$program" "$HOME" 1>&2
             printf '%s: Login and generate one here: https://api.imgur.com/oauth2/addclient\n' "$program" 1>&2
 
-            >"${HOME}/.grumi"
+            mkdir -p "${HOME}/.config/grumi"
+            >"${HOME}/.config/grumi/client_id"
             exit 1
         fi
     fi
