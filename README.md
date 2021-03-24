@@ -41,7 +41,7 @@ _Email_|`grumi@example.com`
 Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.config/grumi/client_id` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
 
 ## Restrictions
-Imgur impose some harsher restrictions on API uploads compared to their website uploader:
+Imgur impose some harsher restrictions on API uploads compared to their website uploader.
 - The following MIME types are supported:
   - Images: `image/jpeg`, `image/gif`, `image/apng`, `image/tiff` & `image/png`.
   - Videos: `video/mp4`, `video/webm`, `video/x-matroska`, `video/quicktime`, `video/x-flv`, `video/x-msvideo`, `video/x-ms-wmv` & `video/mpeg`.
