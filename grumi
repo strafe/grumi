@@ -64,7 +64,7 @@ function check_id() {
 
         if [ -z "$client_id" ]; then
             printf '%s: You must provide a valid Client ID using -c, --client_id or in %s/.config/grumi/client_id\n' "$program" "$HOME" 1>&2
-            printf '%s: Login and generate one here: https://api.imgur.com/oauth2/addclient\n' "$program" 1>&2
+            printf '%s: Details about how to generate one can be found here: https://github.com/strafe/grumi#setup\n' "$program" 1>&2
 
             mkdir -p "${HOME}/.config/grumi"
             >"${HOME}/.config/grumi/client_id"
