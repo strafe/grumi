@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur via the command line.
 readonly program="$(basename "$0")"
-readonly version=0.5.0
+readonly version=0.6.0
 
 function process_arguments() {
     # If no arguments are supplied.
@@ -73,6 +73,44 @@ function check_id() {
     fi
 }
 
+function check_file() {
+    local -r supported_image_size=10000000
+    local -r supported_video_size=200000000
+    local -r supported_video_length=60
+    local -r supported_mime_types=(jpeg gif apng tiff png mp4 webm x-matroska quicktime x-flv x-msvideo x-ms-wmv mpeg)
+
+    local -r mime_type="$(file -bL --mime-type "$1")"
+    if [[ ! "${supported_mime_types[@]}" =~ "${mime_type##*/}" ]]; then
+        echo "Unsupported mime type ${mime_type}"
+        return 1
+    fi
+
+    # Support BSD stat (macOS) and GNU stat (Linux).
+    local file_size
+    case "$(stat --version 2> /dev/null | grep -o 'stat\s(GNU\scoreutils)')" in
+        'stat (GNU coreutils)') file_size="$(stat -c%s "$1")" ;;
+        '') file_size="$(stat -f%z "$1")" ;;
+    esac
+
+    if [[ "${mime_type%%/*}" == image ]] && (( "$file_size" > "$supported_image_size" )); then
+        printf 'Image too large %.2fMB, %.2fMB max' "$(bc -l <<< "(${file_size}/1000000)" 2> /dev/null)" "$(bc -l <<< "(${supported_image_size}/1000000)" 2> /dev/null)"
+        return 1
+    elif [[ "${mime_type%%/*}" == video ]]; then
+        if (( "$file_size" > "$supported_video_size" )); then
+            printf 'Video too large %.2fMB, %.2fMB max' "$(bc -l <<< "(${file_size}/1000000)" 2> /dev/null)" "$(bc -l <<< "(${supported_video_size}/1000000)" 2> /dev/null)"
+            return 1
+        fi
+
+        # Check video length if ffprobe is installed.
+        if command -v ffprobe &>/dev/null && (( "$(echo "$(ffprobe -i "$1" -show_entries format=duration -v quiet -of csv='p=0') > "$supported_video_length"" | bc -l)" )); then
+            echo "Video too long ${supported_video_length}s max"
+            return 1
+        fi
+    fi
+
+    echo "${mime_type%%/*}"
+}
+
 function process_files() {
     if (( "$#" == 0 )); then
         printf '%s: No files were provided.\n' "$program" 1>&2
@@ -86,8 +124,16 @@ function process_files() {
             continue
         fi
 
+        local file_type
+        file_type="$(check_file "$f")"
+        if (( "$?" == 1 )); then
+            printf '%s: %s: Failed to process (error: %s).\n' "$program" "$f" "$file_type" 1>&2
+            continue
+        fi
+
+        # Must be declared and assigned separately in order for $? to be accurate.
         local result
-        result="$(upload_file "$f")"
+        result="$(upload_file "$f" "${file_type}=@")"
         if (( "$?" == 1 )); then
             printf '%s: %s: Failed to upload (error: %s).\n' "$program" "$f" "$result" 1>&2
             continue
@@ -118,13 +164,11 @@ function process_files() {
 }
 
 function upload_file() {
-    local -r file_type="$(file -b --mime-type "$1" | sed 's/\/.*$//')=@"
-
     local -r response="$(curl -s --http1.1 \
-        -X POST https://api.imgur.com/3/"$([[ "$file_type" == "video"* ]] && echo upload || echo image)" \
+        -X POST https://api.imgur.com/3/"$([[ "$2" == "video=@" ]] && echo upload || echo image)" \
         -H "Authorization: Client-ID ${client_id}" \
         -F "disable_audio=${disable_audio}" \
-        -F "$([[ "$1" == "http"* ]] && echo image= || echo "$file_type")${1}")"
+        -F "$([[ "$1" == "http"* ]] && echo image= || echo "$2")${1}")"
 
     # Error handling is tricky as the returned JSON is not consistent (sometimes data.error is an object).
     if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
@@ -172,8 +216,8 @@ function create_album() {
 
 function print_urls() {
     for f in "$@"; do
-        local -r url="$(cut -d';' -f2 <<< "$f")"
-        local -r src="$(cut -d';' -f3 <<< "$f")"
+        local url="$(cut -d';' -f2 <<< "$f")"
+        local src="$(cut -d';' -f3 <<< "$f")"
         printf '%s: %s (%s)\n' "$program" "$url" "${src##*/}"
     done
 }
