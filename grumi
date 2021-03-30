@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur via the command line.
 readonly program="$(basename "$0")"
-readonly version=0.6.1
+readonly version=0.7.0
 
 function process_arguments() {
     # If no arguments are supplied.
