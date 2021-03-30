@@ -67,7 +67,7 @@ function check_id() {
             printf '%s: Details about how to generate one can be found here: https://github.com/strafe/grumi#setup\n' "$program" 1>&2
 
             mkdir -p "${XDG_CONFIG_HOME:-"${HOME}"/.config}/grumi"
-            >"${XDG_CONFIG_HOME:-"${HOME}"/.config}/grumi/client_id"
+            true>"${XDG_CONFIG_HOME:-"${HOME}"/.config}/grumi/client_id"
             exit 1
         fi
     fi
@@ -80,7 +80,7 @@ function check_file() {
     local -r supported_mime_types=(jpeg gif apng tiff png mp4 webm x-matroska quicktime x-flv x-msvideo x-ms-wmv mpeg)
 
     local -r mime_type="$(file -bL --mime-type "$1")"
-    if [[ ! "${supported_mime_types[@]}" =~ "${mime_type##*/}" ]]; then
+    if [[ ! "${supported_mime_types[*]}" =~ ${mime_type##*/} ]]; then
         echo "Unsupported mime type ${mime_type}"
         return 1
     fi
@@ -102,7 +102,7 @@ function check_file() {
         fi
 
         # Check video length if ffprobe is installed.
-        if command -v ffprobe &>/dev/null && (( "$(echo "$(ffprobe -i "$1" -show_entries format=duration -v quiet -of csv='p=0') > "$supported_video_length"" | bc -l)" )); then
+        if command -v ffprobe &>/dev/null && (( "$(echo "$(ffprobe -i "$1" -show_entries format=duration -v quiet -of csv='p=0') > $supported_video_length" | bc -l)" )); then
             echo "Video too long ${supported_video_length}s max"
             return 1
         fi
@@ -124,6 +124,7 @@ function process_files() {
             continue
         fi
 
+        # https://github.com/koalaman/shellcheck/wiki/SC2155#rationale-1
         local file_type
         file_type="$(check_file "$f")"
         if (( "$?" == 1 )); then
@@ -131,7 +132,6 @@ function process_files() {
             continue
         fi
 
-        # Must be declared and assigned separately in order for $? to be accurate.
         local result
         result="$(upload_file "$f" "${file_type}=@")"
         if (( "$?" == 1 )); then
@@ -193,7 +193,7 @@ function upload_file() {
 function create_album() {
     form=()
     for i in "$@"; do
-        form+=("-F deletehashes[]="$(cut -d ';' -f 1 <<< "$i")"")
+        form+=("-F deletehashes[]=$(cut -d ';' -f 1 <<< "$i")")
     done
 
     local -r response="$(curl -s --http1.1 \
