@@ -38,7 +38,7 @@ _Authorization callback URL_|`example.com`
 _Email_|`grumi@example.com`
 <br>
 
-Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.config/grumi/client_id` (you can also use the `-c, --client_id` option instead of the local file if it fits your use case).
+Once submitted you'll be given a `Client ID` and `Client secret`. Copy the `Client ID` and place it in `$HOME/.config/grumi/client_id` (or use `$XDG_CONFIG_HOME/grumi/client_id` if you wish). You can also use the `-c, --client_id` option instead of the config file if it better fits your use case.
 
 ## Restrictions
 Imgur impose some harsher restrictions on API uploads compared to their website uploader.
