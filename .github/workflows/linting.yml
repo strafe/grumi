@@ -1,0 +1,16 @@
+name: "Linting"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "grumi"
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
