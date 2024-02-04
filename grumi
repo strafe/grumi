@@ -216,7 +216,7 @@ function create_album() {
         return 1
     fi
 
-    echo "$(jq -r '.data.id' <<< "$response")"
+    jq -r '.data.id' <<< "$response"
 }
 
 function print_urls() {
