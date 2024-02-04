@@ -21,7 +21,7 @@ function process_arguments() {
             -d|--disable_audio) readonly disable_audio=1 ;;
             -*) printf '%s: Invalid option: %s\n' "$program" "$1" 1>&2; exit 1 ;;
             *) args+=("$1") ;;
-        esac    
+        esac
         shift
     done
 }
