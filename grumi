@@ -2,8 +2,9 @@
 
 # grumi
 # 🖼️ Upload an image, video or album to Imgur via the command line.
-readonly program="$(basename "$0")"
-readonly version=0.7.0
+program="$(basename "$0")"
+version=0.7.0
+readonly program version
 
 function process_arguments() {
     # If no arguments are supplied.
@@ -59,7 +60,8 @@ function depends_on() {
 function check_id() {
     if [ -z "$client_id" ]; then
         if [ -f "${XDG_CONFIG_HOME:-"${HOME}"/.config}/grumi/client_id" ]; then
-            readonly client_id="$(<"${XDG_CONFIG_HOME:-"${HOME}"/.config}/grumi/client_id")"
+            client_id="$(<"${XDG_CONFIG_HOME:-"${HOME}"/.config}/grumi/client_id")"
+            readonly client_id
         fi
 
         if [ -z "$client_id" ]; then
@@ -172,7 +174,8 @@ function upload_file() {
 
     # Error handling is tricky as the returned JSON is not consistent (sometimes data.error is an object).
     if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
-        local error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
+        local error
+        error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
         if [ -z "$error" ]; then
             error="$(jq -r '.data.error' 2>/dev/null <<< "$response")"
         fi
@@ -182,7 +185,8 @@ function upload_file() {
     fi
 
     # Certain videos formats get returned without an extension in the URL.
-    local link="$(jq -r '.data.deletehash + ";" + .data.link' <<< "$response")"
+    local link
+    link="$(jq -r '.data.deletehash + ";" + .data.link' <<< "$response")"
     if [[ "$link" == *'.' ]]; then
         link="${link}mp4"
     fi
@@ -202,7 +206,8 @@ function create_album() {
         "${form[@]}")"
 
     if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
-        local error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
+        local error
+        error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
         if [ -z "$error" ]; then
             error="$(jq -r '.data.error' 2>/dev/null <<< "$response")"
         fi
@@ -216,8 +221,10 @@ function create_album() {
 
 function print_urls() {
     for f in "$@"; do
-        local url="$(cut -d';' -f2 <<< "$f")"
-        local src="$(cut -d';' -f3 <<< "$f")"
+        local url src
+        url="$(cut -d';' -f2 <<< "$f")"
+        src="$(cut -d';' -f3 <<< "$f")"
+
         printf '%s: %s (%s)\n' "$program" "$url" "${src##*/}"
     done
 }
