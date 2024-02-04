@@ -3,7 +3,7 @@
 # grumi
 # 🖼️ Upload an image, video or album to Imgur via the command line.
 program="$(basename "$0")"
-version=0.7.0
+version=0.7.1
 readonly program version
 
 function process_arguments() {
