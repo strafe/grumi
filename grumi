@@ -184,9 +184,9 @@ function upload_file() {
         return 1
     fi
 
-    # Certain videos formats get returned without an extension in the URL.
+    # Certain videos formats get returned without an extension in the URL (e.g. x-flv).
     local link
-    link="$(jq -r '.data.deletehash + ";" + .data.link' <<< "$response")"
+    link="$(sed 's/.*"deletehash":"\([^"]*\)".*"link":"\([^"]*\)".*/\1;\2/' <<< "$response")"
     if [[ "$link" == *'.' ]]; then
         link="${link}mp4"
     fi
