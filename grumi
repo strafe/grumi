@@ -173,7 +173,7 @@ function upload_file() {
         -F "$([[ "$1" == "http"* ]] && echo image= || echo "$2")${1}")"
 
     # Error handling is tricky as the returned JSON is not consistent (sometimes data.error is an object).
-    if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
+    if [[ "$(sed 's/.*"success":\([^,]*\),.*/\1/' <<< "$response")" == false ]]; then
         local error
         error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
         if [ -z "$error" ]; then
@@ -205,7 +205,7 @@ function create_album() {
         -H "Authorization: Client-ID ${client_id}" \
         "${form[@]}")"
 
-    if [[ "$(jq -r '.success' <<< "$response")" == false ]]; then
+    if [[ "$(sed 's/.*"success":\([^,]*\),.*/\1/' <<< "$response")" == false ]]; then
         local error
         error="$(jq -r '.data.error.message' 2>/dev/null <<< "$response")"
         if [ -z "$error" ]; then
@@ -216,7 +216,7 @@ function create_album() {
         return 1
     fi
 
-    jq -r '.data.id' <<< "$response"
+    sed 's/.*"id":"\([^"]*\)".*/\1/' <<< "$response"
 }
 
 function print_urls() {
